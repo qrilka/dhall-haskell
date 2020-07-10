@@ -782,7 +782,7 @@ prettyCharacterSet characterSet expression =
                 [ prettyExpression a ]
     prettyAnnotatedExpression (ListLit (Just a) b) =
             list (map prettyExpression (Data.Foldable.toList b))
-        <>  " : "
+        <> " " <> colon <> " "
         <>  prettyApplicationExpression a
     prettyAnnotatedExpression a
         | Just doc <- preserveSource a =
@@ -1320,16 +1320,16 @@ prettyCharacterSet characterSet expression =
                         <>  "    "
                         <>  prettyValue val
 
-    prettyRecord :: Pretty a => Map Text (Expr Src a) -> Doc Ann
+    prettyRecord :: Pretty a => Map Text (RecordField Src a) -> Doc Ann
     prettyRecord =
           braces
         . map (prettyKeyValue prettyAnyLabel prettyExpression colon)
-        . Map.toList
+        . Map.toList . fmap recordFieldValue
 
-    prettyRecordLit :: Pretty a => Map Text (Expr Src a) -> Doc Ann
+    prettyRecordLit :: Pretty a => Map Text (RecordField Src a) -> Doc Ann
     prettyRecordLit = prettyRecordLike braces
 
-    prettyCompletionLit :: Pretty a => Int -> Map Text (Expr Src a) -> Doc Ann
+    prettyCompletionLit :: Pretty a => Int -> Map Text (RecordField Src a) -> Doc Ann
     prettyCompletionLit = prettyRecordLike . hangingBraces
 
     prettyRecordLike braceStyle a
@@ -1340,7 +1340,7 @@ prettyCharacterSet characterSet expression =
       where
         consolidated = consolidateRecordLiteral a
 
-        prettyRecordEntry (keys, value) =
+        prettyRecordEntry (keys, RecordField _ value _) =
             case keys of
                 key :| []
                     | Var (V key' 0) <- Dhall.Syntax.shallowDenote value
@@ -1517,21 +1517,21 @@ pretty_ :: Pretty a => a -> Text
 pretty_ = prettyToStrictText
 
 {- This utility function converts
-   `{ x = { y = { z = 1 } } }` to `{ x.y.z. = 1 }`
+   `{ x = { y = { z = 1 } } }` to `{ x.y.z = 1 }`
 -}
 consolidateRecordLiteral
-    :: Map Text (Expr s a) -> Map (NonEmpty Text) (Expr s a)
+    :: Map Text (RecordField s a) -> Map (NonEmpty Text) (RecordField s a)
 consolidateRecordLiteral = Map.fromList . fmap adapt . Map.toList
   where
-    adapt :: (Text, Expr s a) -> (NonEmpty Text, Expr s a)
+    adapt :: (Text, RecordField s a) -> (NonEmpty Text, RecordField s a)
     adapt (key, expression) =
-        case shallowDenote expression of
+        case shallowDenote (recordFieldValue expression) of
             RecordLit m ->
                 case fmap adapt (Map.toList m) of
                     [ (keys, expression') ] ->
                         (NonEmpty.cons key keys, expression')
                     _ ->
-                        (pure key, RecordLit m)
+                        (pure key, makeRecordField $ RecordLit m)
             _ ->
                 (pure key, expression)
 

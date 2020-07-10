@@ -20,16 +20,17 @@ module Dhall.Lint
 import Control.Applicative ((<|>))
 
 import Dhall.Syntax
-    ( Binding(..)
-    , Chunks(..)
-    , Directory(..)
-    , Expr(..)
-    , File(..)
-    , FilePrefix(..)
-    , Import(..)
-    , ImportHashed(..)
-    , ImportType(..)
-    , Var(..)
+    ( Binding (..)
+    , Chunks (..)
+    , Directory (..)
+    , Expr (..)
+    , File (..)
+    , FilePrefix (..)
+    , Import (..)
+    , ImportHashed (..)
+    , ImportType (..)
+    , RecordField (..)
+    , Var (..)
     , subExpressions
     )
 
@@ -139,7 +140,7 @@ useToMap
                 (Core.shallowDenote -> List)
                 (Core.shallowDenote -> Record
                     (Map.sort ->
-                        [ ("mapKey", Core.shallowDenote -> Text)
+                        [ ("mapKey", RecordField _ (Core.shallowDenote -> Text) _)
                         , ("mapValue", _)
                         ]
                     )
@@ -162,7 +163,7 @@ useToMap (ListLit _ keyValues)
         case Core.shallowDenote keyValue of
             RecordLit
                 (Map.sort ->
-                    [ ("mapKey"  , (Core.shallowDenote -> TextLit (Chunks [] key)))
+                    [ ("mapKey"  , Core.shallowDenote . Core.recordFieldValue -> TextLit (Chunks [] key))
                     , ("mapValue", value)
                     ]
                 ) ->
