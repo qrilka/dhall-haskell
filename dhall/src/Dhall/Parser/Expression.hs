@@ -809,6 +809,7 @@ parsers embedded = Parsers {..}
                     return (Record m)
 
             let keysValue = do
+                    src0 <- src whitespace
                     keys <- Combinators.NonEmpty.sepBy1 anyLabelOrSome (try (whitespace *> _dot) *> whitespace)
 
                     let normalRecordEntry = do
@@ -818,25 +819,24 @@ parsers embedded = Parsers {..}
 
                             value <- expression
 
-                            let cons key (key', values) =
-                                    (key, makeRecordField $  RecordLit [ (key', values) ])
+                            let cons key (key', values@(RecordField s0 _)) =
+                                    (key, RecordField s0 $ RecordLit [ (key', values) ])
 
-                            let nil = (NonEmpty.last keys, makeRecordField value)
+                            let nil = (NonEmpty.last keys, RecordField (Just src0) value)
 
                             return (foldr cons nil (NonEmpty.init keys))
 
                     let punnedEntry =
                             case keys of
-                                x :| [] -> return (x, makeRecordField $ Var (V x 0))
+                                x :| [] -> return (x, RecordField (Just src0) $ Var (V x 0))
                                 _       -> empty
 
                     (normalRecordEntry <|> punnedEntry) <* whitespace
 
             let nonEmptyRecordLiteral = do
-                    whitespace
                     a <- keysValue
 
-                    as <- many (try (_comma *> whitespace *> keysValue))
+                    as <- many (try (_comma *> keysValue))
 
                     _ <- optional (whitespace *> _comma)
 
