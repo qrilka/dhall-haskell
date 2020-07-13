@@ -13,6 +13,7 @@ import qualified Dhall.Test.Normalization
 import qualified Dhall.Test.Parser
 import qualified Dhall.Test.QuickCheck
 import qualified Dhall.Test.Regression
+import qualified Dhall.Test.Schemas
 import qualified Dhall.Test.SemanticHash
 import qualified Dhall.Test.Tags
 import qualified Dhall.Test.TH
