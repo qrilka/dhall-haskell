@@ -780,14 +780,14 @@ parsers embedded = Parsers {..}
 
                     b <- expression
 
-                    src1 <- src whitespace
+                    whitespace
 
-                    e <- Text.Megaparsec.many (do
-                        (src3, c) <- try $ do
+                    e <- Text.Megaparsec.many $ do
+                        (src0', c) <- try $ do
                             _comma
-                            src3 <- src whitespace
+                            src0' <- src whitespace
                             c <- anyLabelOrSome
-                            return (src3, c)
+                            return (src0', c)
 
                         whitespace
 
@@ -797,13 +797,14 @@ parsers embedded = Parsers {..}
 
                         d <- expression
 
-                        src4 <- src whitespace
-                        return (c, RecordField (Just src3) d (Just src4)) )
+                        whitespace
+
+                        return (c, RecordField (Just src0') d)
 
                     _ <- optional (whitespace *> _comma)
                     whitespace
 
-                    m <- toMap ((a, RecordField (Just src0) b (Just src1)) : e)
+                    m <- toMap ((a, RecordField (Just src0) b) : e)
 
                     return (Record m)
 

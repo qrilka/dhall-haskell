@@ -973,13 +973,13 @@ convertToHomogeneousMaps (Conversion {..}) e0 = loop (Core.normalize e0)
         Core.Record a ->
             Core.Record a'
           where
-            f (Core.RecordField s0 re s1) = Core.RecordField s0 (loop re) s1
+            f (Core.RecordField s0 re) = Core.RecordField s0 (loop re)
             a' = fmap f a
 
         Core.RecordLit a ->
             Core.RecordLit a'
           where
-            f (Core.RecordField s0 re s1) = Core.RecordField s0 (loop re) s1
+            f (Core.RecordField s0 re) = Core.RecordField s0 (loop re)
             a' = f <$> a
 
         Core.Union a ->

@@ -91,7 +91,7 @@ toDirectoryTree path expression = case expression of
     RecordLit keyValues ->
         Map.unorderedTraverseWithKey_ process $ recordFieldValue <$> keyValues
 
-    ListLit (Just (Record [ ("mapKey", RecordField _ Text _), ("mapValue", _) ])) [] ->
+    ListLit (Just (Record [ ("mapKey", recordFieldValue -> Text), ("mapValue", _) ])) [] ->
         return ()
 
     ListLit _ records

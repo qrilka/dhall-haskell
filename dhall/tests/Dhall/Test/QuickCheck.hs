@@ -252,8 +252,7 @@ instance (Arbitrary s, Arbitrary a) => Arbitrary (PreferAnnotation s a) where
 
 instance (Arbitrary s, Arbitrary a) => Arbitrary (RecordField s a) where
     arbitrary =
-        let f a = RecordField Nothing a Nothing
-        in lift1 f
+        lift1 Dhall.Core.makeRecordField
 
     shrink = genericShrink
 

@@ -293,13 +293,16 @@ instance Bifunctor PreferAnnotation where
 
 For example,
 
-> { {- A -} x (: | =) T {- B -} }
+> { {- A -} x : T }
+
+... or
+
+> { {- A -} x = T }
 
 will be instantiated as follows:
 
 * @recordFieldSrc0@ corresponds to the @A@ comment.
 * @field@ is @"T"@
-* @recordFieldSrc1@ corresponds to the @B@ comment.
 
 Although the @A@ comment isn't annotating the @"T"@ Record Field,
 this is the best place to keep these comments
@@ -307,17 +310,16 @@ this is the best place to keep these comments
 data RecordField s a = RecordField
     { recordFieldSrc0  :: Maybe s
     , recordFieldValue :: Expr s a
-    , recordFieldSrc1  :: Maybe s
     } deriving (Data, Eq, Foldable, Functor, Generic, Lift, NFData, Ord, Show, Traversable)
 
 -- | Construct a 'RecordField' with no src information
 makeRecordField :: Expr s a -> RecordField s a
-makeRecordField e = RecordField Nothing e Nothing
+makeRecordField = RecordField Nothing
 
 
 instance Bifunctor RecordField where
-    first k (RecordField s0 value s1) =
-        RecordField (k <$> s0) (first k value) (k <$> s1)
+    first k (RecordField s0 value) =
+        RecordField (k <$> s0) (first k value)
     second = fmap
 
 {-| Syntax tree for expressions
@@ -574,7 +576,7 @@ instance Monad (Expr s) where
         RecordLit a -> RecordLit $ f <$> a
         _ -> Lens.over unsafeSubExpressions (>>= k) expression
       where
-        f (RecordField s0 e s1) = RecordField s0 (e >>= k) s1
+        f (RecordField s0 e) = RecordField s0 (e >>= k)
 
 instance Bifunctor Expr where
     first k (Note a b   ) = Note (k a) (first k b)
@@ -770,11 +772,10 @@ recordFieldExprs
     :: Applicative f
     => (Expr s a -> f (Expr s b))
     -> RecordField s a -> f (RecordField s b)
-recordFieldExprs f (RecordField s0 e s1) =
+recordFieldExprs f (RecordField s0 e) =
     RecordField
         <$> pure s0
         <*> f e
-        <*> pure s1
 
 -- | A traversal over the immediate sub-expressions in 'Chunks'.
 chunkExprs
@@ -1005,8 +1006,7 @@ denote expression = case expression of
     RecordLit a -> RecordLit $ denoteRecordField <$> a
     _ -> Lens.over unsafeSubExpressions denote expression
   where
-      denoteRecordField (RecordField _ e _) = RecordField Nothing (denote e) Nothing
-
+      denoteRecordField (RecordField _ e) = RecordField Nothing (denote e)
 
 -- | The \"opposite\" of `denote`, like @first absurd@ but faster
 renote :: Expr Void a -> Expr s a

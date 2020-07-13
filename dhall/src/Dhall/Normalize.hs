@@ -530,11 +530,11 @@ normalizeWithM ctx e0 = loop (Syntax.denote e0)
     None -> pure None
     Record kts -> Record . Dhall.Map.sort <$> kts'
       where
-        f (RecordField s0 expr s1)  = RecordField s0 <$> loop expr <*> pure s1
+        f (RecordField s0 expr) = RecordField s0 <$> loop expr
         kts' = traverse f kts
     RecordLit kvs -> RecordLit . Dhall.Map.sort <$> kvs'
       where
-        f (RecordField s0 expr s1) = RecordField s0 <$> loop expr <*> pure s1
+        f (RecordField s0 expr) = RecordField s0 <$> loop expr
         kvs' = traverse f kvs
     Union kts -> Union . Dhall.Map.sort <$> kts'
       where
@@ -548,8 +548,8 @@ normalizeWithM ctx e0 = loop (Syntax.denote e0)
         decide (RecordLit m) (RecordLit n) =
             RecordLit (Dhall.Map.unionWith f m n)
           where
-            f (RecordField _ expr _) (RecordField _ expr' _) =
-              RecordField Nothing (decide expr expr') Nothing
+            f (RecordField _ expr) (RecordField _ expr') =
+              makeRecordField $ decide expr expr'
         decide l r =
             Combine mk l r
     CombineTypes x y -> decide <$> loop x <*> loop y
@@ -561,8 +561,8 @@ normalizeWithM ctx e0 = loop (Syntax.denote e0)
         decide (Record m) (Record n) =
             Record (Dhall.Map.unionWith f m n)
           where
-            f (RecordField _ expr _) (RecordField _ expr' _) =
-              RecordField Nothing (decide expr expr') Nothing
+            f (RecordField _ expr) (RecordField _ expr') =
+              makeRecordField $ decide expr expr'
         decide l r =
             CombineTypes l r
     Prefer _ x y -> decide <$> loop x <*> loop y
@@ -640,7 +640,7 @@ normalizeWithM ctx e0 = loop (Syntax.denote e0)
     Field r x        -> do
         let singletonRecordLit v = RecordLit (Dhall.Map.singleton x v)
 
-        let loopRecordField (RecordField s0 expr s1) = RecordField <$> pure s0 <*> loop expr <*> pure s1
+        let loopRecordField (RecordField s0 expr) = RecordField <$> pure s0 <*> loop expr
 
         r' <- loop r
         case r' of

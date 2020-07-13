@@ -778,7 +778,7 @@ toHeaders _ = []
 
 toHeader :: Expr s a -> Maybe HTTPHeader
 toHeader (RecordLit m) = do
-    (RecordField _ (TextLit (Chunks [] keyText)) _, RecordField _ (TextLit (Chunks [] valueText)) _)
+    (RecordField _ (TextLit (Chunks [] keyText)), RecordField _ (TextLit (Chunks [] valueText)))
         <- lookupHeader <|> lookupMapKey
     let keyBytes   = Data.Text.Encoding.encodeUtf8 keyText
     let valueBytes = Data.Text.Encoding.encodeUtf8 valueText
@@ -971,11 +971,11 @@ normalizeHeaders url@URL { headers = Just headersExpression } = do
             let expected :: Expr Src Void
                 expected =
                     App List
-                        ( Record
-                            ( Dhall.Map.fromList
-                                [ (key₀, RecordField Nothing Text Nothing)
-                                , (key₁, RecordField Nothing Text Nothing) ]
-                            )
+                        ( Record $ Core.makeRecordField <$>
+                            Dhall.Map.fromList
+                                [ (key₀, Text)
+                                , (key₁, Text)
+                                ]
                         )
 
             let suffix_ = Dhall.Pretty.Internal.prettyToStrictText expected
@@ -987,7 +987,7 @@ normalizeHeaders url@URL { headers = Just headersExpression } = do
                     _ ->
                         Annot loadedExpr expected
 
-            _ <- case (Dhall.TypeCheck.typeOf annot) of
+            _ <- case Dhall.TypeCheck.typeOf annot of
                 Left err -> throwMissingImport (Imported _stack err)
                 Right _  -> return ()
 

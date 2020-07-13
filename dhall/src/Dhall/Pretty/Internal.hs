@@ -1340,7 +1340,7 @@ prettyCharacterSet characterSet expression =
       where
         consolidated = consolidateRecordLiteral a
 
-        prettyRecordEntry (keys, RecordField _ value _) =
+        prettyRecordEntry (keys, RecordField _ value) =
             case keys of
                 key :| []
                     | Var (V key' 0) <- Dhall.Syntax.shallowDenote value

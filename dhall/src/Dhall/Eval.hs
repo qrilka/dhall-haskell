@@ -1143,7 +1143,7 @@ quote !env !t0 =
     {-# INLINE qApp #-}
 
     quoteRecordField :: Val a -> RecordField Void a
-    quoteRecordField e = RecordField Nothing (quote env e) Nothing
+    quoteRecordField = Syntax.makeRecordField . quote env
     {-# INLINE quoteRecordField #-}
 
 -- | Normalize an expression in an environment of values. Any variable pointing out of
@@ -1310,4 +1310,4 @@ alphaNormalize = goEnv EmptyNames
         go                     = goEnv e0
         goBind x               = goEnv (Bind e0 x)
         goChunks (Chunks ts x) = Chunks (fmap (fmap go) ts) x
-        goRecordField (RecordField s0 e s1) = RecordField s0 (go e) s1
+        goRecordField (RecordField s0 e) = RecordField s0 (go e)

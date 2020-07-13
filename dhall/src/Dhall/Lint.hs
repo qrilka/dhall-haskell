@@ -29,7 +29,6 @@ import Dhall.Syntax
     , Import (..)
     , ImportHashed (..)
     , ImportType (..)
-    , RecordField (..)
     , Var (..)
     , subExpressions
     )
@@ -140,7 +139,7 @@ useToMap
                 (Core.shallowDenote -> List)
                 (Core.shallowDenote -> Record
                     (Map.sort ->
-                        [ ("mapKey", RecordField _ (Core.shallowDenote -> Text) _)
+                        [ ("mapKey", Core.shallowDenote . Core.recordFieldValue -> Text)
                         , ("mapValue", _)
                         ]
                     )
